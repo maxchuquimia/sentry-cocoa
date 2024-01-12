@@ -24,6 +24,7 @@
 #import "SentryTraceOrigins.h"
 #import "SentryTracer.h"
 #import "SentryUser.h"
+#import "NSURLSessionTask+Sentry.h"
 #import <objc/runtime.h>
 @import SentryPrivate;
 
@@ -439,6 +440,7 @@ SentryNetworkTracker ()
     }
 
     context[@"response"] = response;
+    context[@"graphql"] = [sessionTask sentry_graphQLOperationDetails];
     event.context = context;
 
     [SentrySDK captureEvent:event];
@@ -486,6 +488,7 @@ SentryNetworkTracker ()
     if (responseStatusCode != -1) {
         NSNumber *statusCode = [NSNumber numberWithInteger:responseStatusCode];
         breadcrumbData[@"status_code"] = statusCode;
+        breadcrumbData[@"graphql"] = [sessionTask sentry_graphQLOperationDetails];
         breadcrumbData[@"reason"] =
             [NSHTTPURLResponse localizedStringForStatusCode:responseStatusCode];
     }
