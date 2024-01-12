@@ -99,6 +99,7 @@ NSString *const kSentryDefaultEnvironment = @"production";
         _defaultSampleRate = @1;
         self.sampleRate = _defaultSampleRate;
         self.enableAutoSessionTracking = YES;
+        self.enableGraphQLOperationTracking = NO;
         self.enableWatchdogTerminationTracking = YES;
         self.sessionTrackingIntervalMillis = [@30000 unsignedIntValue];
         self.attachStacktrace = YES;
@@ -351,6 +352,9 @@ NSString *const kSentryDefaultEnvironment = @"production";
 
     [self setBool:options[@"enableAutoSessionTracking"]
             block:^(BOOL value) { self->_enableAutoSessionTracking = value; }];
+
+    [self setBool:options[@"enableGraphQLOperationTracking"]
+            block:^(BOOL value) { self->_enableGraphQLOperationTracking = value; }];
 
     [self setBool:options[@"enableWatchdogTerminationTracking"]
             block:^(BOOL value) { self->_enableWatchdogTerminationTracking = value; }];

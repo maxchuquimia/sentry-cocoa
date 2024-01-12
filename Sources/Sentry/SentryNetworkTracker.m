@@ -24,6 +24,7 @@
 #import "SentryTraceOrigins.h"
 #import "SentryTracer.h"
 #import "SentryUser.h"
+#import "NSURLSessionTask+Sentry.h"
 #import <objc/runtime.h>
 @import SentryPrivate;
 
@@ -42,6 +43,7 @@ SentryNetworkTracker ()
 @property (nonatomic, assign) BOOL isNetworkTrackingEnabled;
 @property (nonatomic, assign) BOOL isNetworkBreadcrumbEnabled;
 @property (nonatomic, assign) BOOL isCaptureFailedRequestsEnabled;
+@property (nonatomic, assign) BOOL isGraphQLOperationTrackingEnabled;
 
 @end
 
@@ -61,6 +63,7 @@ SentryNetworkTracker ()
         _isNetworkTrackingEnabled = NO;
         _isNetworkBreadcrumbEnabled = NO;
         _isCaptureFailedRequestsEnabled = NO;
+        _isGraphQLOperationTrackingEnabled = NO;
     }
     return self;
 }
@@ -86,12 +89,20 @@ SentryNetworkTracker ()
     }
 }
 
+- (void)enableGraphQLOperationTracking
+{
+    @synchronized(self) {
+        _isGraphQLOperationTrackingEnabled = YES;
+    }
+}
+
 - (void)disable
 {
     @synchronized(self) {
         _isNetworkBreadcrumbEnabled = NO;
         _isNetworkTrackingEnabled = NO;
         _isCaptureFailedRequestsEnabled = NO;
+        _isGraphQLOperationTrackingEnabled = NO;
     }
 }
 
@@ -439,6 +450,11 @@ SentryNetworkTracker ()
     }
 
     context[@"response"] = response;
+
+    if (self.isGraphQLOperationTrackingEnabled) {
+        context[@"graphql"] = [sessionTask sentry_graphQLOperationName];
+    }
+
     event.context = context;
 
     [SentrySDK captureEvent:event];
@@ -488,6 +504,10 @@ SentryNetworkTracker ()
         breadcrumbData[@"status_code"] = statusCode;
         breadcrumbData[@"reason"] =
             [NSHTTPURLResponse localizedStringForStatusCode:responseStatusCode];
+
+        if (self.isGraphQLOperationTrackingEnabled) {
+            breadcrumbData[@"graphql"] = [sessionTask sentry_graphQLOperationName];
+        }
     }
 
     if (urlComponents.query != nil) {
